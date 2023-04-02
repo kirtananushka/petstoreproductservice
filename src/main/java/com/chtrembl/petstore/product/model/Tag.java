@@ -1,102 +1,60 @@
 package com.chtrembl.petstore.product.model;
 
 import java.util.Objects;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-import org.springframework.validation.annotation.Validated;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.annotations.ApiModelProperty;
-
-/**
- * Tag
- */
-@Validated
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2021-12-20T15:31:39.272-05:00")
-
+@Entity
+@Table(name = "tag")
 public class Tag {
-	@JsonProperty("id")
-	private Long id = null;
 
-	@JsonProperty("name")
-	private String name = null;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "default_generator")
+  private Long id;
+  private String name;
 
-	public Tag id(Long id) {
-		this.id = id;
-		return this;
-	}
+  public Long getId() {
+    return id;
+  }
 
-	/**
-	 * Get id
-	 * 
-	 * @return id
-	 **/
-	@ApiModelProperty(value = "")
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-	public Long getId() {
-		return id;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	public Tag name(String name) {
-		this.name = name;
-		return this;
-	}
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
 
-	/**
-	 * Get name
-	 * 
-	 * @return name
-	 **/
-	@ApiModelProperty(value = "")
+    Tag tag = (Tag) o;
 
-	public String getName() {
-		return name;
-	}
+    if (!Objects.equals(id, tag.id)) return false;
+    return Objects.equals(name, tag.name);
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  @Override
+  public int hashCode() {
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    return result;
+  }
 
-	@Override
-	public boolean equals(java.lang.Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		Tag tag = (Tag) o;
-		return Objects.equals(this.id, tag.id) && Objects.equals(this.name, tag.name);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(id, name);
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("class Tag {\n");
-
-		sb.append("    id: ").append(toIndentedString(id)).append("\n");
-		sb.append("    name: ").append(toIndentedString(name)).append("\n");
-		sb.append("}");
-		return sb.toString();
-	}
-
-	/**
-	 * Convert the given object to string with each line indented by 4 spaces
-	 * (except the first line).
-	 */
-	private String toIndentedString(java.lang.Object o) {
-		if (o == null) {
-			return "null";
-		}
-		return o.toString().replace("\n", "\n    ");
-	}
+  @Override
+  public String toString() {
+    return "Tag{" +
+      "id=" + id +
+      ", name='" + name + '\'' +
+      '}';
+  }
 }

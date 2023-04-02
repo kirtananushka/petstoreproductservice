@@ -5,6 +5,7 @@
  */
 package com.chtrembl.petstore.product.api;
 
+import com.chtrembl.petstore.product.model.dto.ProductDto;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +23,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.chtrembl.petstore.product.model.DataPreload;
 import com.chtrembl.petstore.product.model.ModelApiResponse;
-import com.chtrembl.petstore.product.model.Product;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -45,16 +44,6 @@ public interface ProductApi {
 		return Optional.empty();
 	}
 
-	// wired in for the scenario the interface declarations need access to scoped
-	// beans, all implementation should occur in Controller tho
-	public DataPreload getBeanToBeAutowired();
-
-	// wired in for the scenario the interface declarations need access to scoped
-	// beans, all implementation should occur in Controller tho
-	default List<Product> getPreloadedProducts() {
-		return getBeanToBeAutowired().getProducts();
-	}
-
 	@ApiOperation(value = "Add a new product to the store", nickname = "addProduct", notes = "", authorizations = {
 			@Authorization(value = "petstore_auth", scopes = {
 					@AuthorizationScope(scope = "write:products", description = "modify products in your account"),
@@ -64,7 +53,7 @@ public interface ProductApi {
 	@RequestMapping(value = "/product", produces = { "application/json", "application/xml" }, consumes = {
 			"application/json", "application/xml" }, method = RequestMethod.POST)
 	ResponseEntity<Void> addProduct(
-			@ApiParam(value = "Product object that needs to be added to the store", required = true) @Valid @RequestBody Product body);
+			@ApiParam(value = "Product   object that needs to be added to the store", required = true) @Valid @RequestBody ProductDto body);
 
 	@ApiOperation(value = "Deletes a product", nickname = "deleteProduct", notes = "", authorizations = {
 			@Authorization(value = "petstore_auth", scopes = {
@@ -79,40 +68,40 @@ public interface ProductApi {
 			@ApiParam(value = "Product id to delete", required = true) @PathVariable("productId") Long productId,
 			@ApiParam(value = "") @RequestHeader(value = "api_key", required = false) String apiKey);
 
-	@ApiOperation(value = "Finds Products by status", nickname = "findProductsByStatus", notes = "Multiple status values can be provided with comma separated strings", response = Product.class, responseContainer = "List", authorizations = {
+	@ApiOperation(value = "Finds Products by status", nickname = "findProductsByStatus", notes = "Multiple status values can be provided with comma separated strings", response = ProductDto.class, responseContainer = "List", authorizations = {
 			@Authorization(value = "petstore_auth", scopes = {
 					@AuthorizationScope(scope = "write:products", description = "modify products in your account"),
 					@AuthorizationScope(scope = "read:products", description = "read your products") }) }, tags = {
 							"product", })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "successful operation", response = Product.class, responseContainer = "List"),
+			@ApiResponse(code = 200, message = "successful operation", response = ProductDto.class, responseContainer = "List"),
 			@ApiResponse(code = 400, message = "Invalid status value") })
 	@RequestMapping(value = "/product/findByStatus", produces = { "application/json",
 			"application/xml" }, method = RequestMethod.GET)
-	ResponseEntity<List<Product>> findProductsByStatus(
+	ResponseEntity<List<ProductDto>> findProductsByStatus(
 			@NotNull @ApiParam(value = "Status values that need to be considered for filter", required = true, allowableValues = "available, pending, sold") @Valid @RequestParam(value = "status", required = true) List<String> status);
 
-	@ApiOperation(value = "Finds Products by tags", nickname = "findProductsByTags", notes = "Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.", response = Product.class, responseContainer = "List", authorizations = {
+	@ApiOperation(value = "Finds Products by tags", nickname = "findProductsByTags", notes = "Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.", response = ProductDto.class, responseContainer = "List", authorizations = {
 			@Authorization(value = "petstore_auth", scopes = {
 					@AuthorizationScope(scope = "write:products", description = "modify products in your account"),
 					@AuthorizationScope(scope = "read:products", description = "read your products") }) }, tags = {
 							"product", })
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "successful operation", response = Product.class, responseContainer = "List"),
+			@ApiResponse(code = 200, message = "successful operation", response = ProductDto.class, responseContainer = "List"),
 			@ApiResponse(code = 400, message = "Invalid tag value") })
 	@RequestMapping(value = "/product/findByTags", produces = { "application/json",
 			"application/xml" }, method = RequestMethod.GET)
-	ResponseEntity<List<Product>> findProductsByTags(
+	ResponseEntity<List<ProductDto>> findProductsByTags(
 			@NotNull @ApiParam(value = "Tags to filter by", required = true) @Valid @RequestParam(value = "tags", required = true) List<String> tags);
 
-	@ApiOperation(value = "Find product by ID", nickname = "getProductById", notes = "Returns a single product", response = Product.class, authorizations = {
+	@ApiOperation(value = "Find product by ID", nickname = "getProductById", notes = "Returns a single product", response = ProductDto.class, authorizations = {
 			@Authorization(value = "api_key") }, tags = { "product", })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "successful operation", response = Product.class),
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "successful operation", response = ProductDto.class),
 			@ApiResponse(code = 400, message = "Invalid ID supplied"),
-			@ApiResponse(code = 404, message = "Product not found") })
+			@ApiResponse(code = 404, message = "ProductDto not found") })
 	@RequestMapping(value = "/product/{productId}", produces = { "application/json",
 			"application/xml" }, method = RequestMethod.GET)
-	ResponseEntity<Product> getProductById(
+	ResponseEntity<ProductDto> getProductById(
 			@ApiParam(value = "ID of product to return", required = true) @PathVariable("productId") Long productId);
 
 	@ApiOperation(value = "Update an existing product", nickname = "updateProduct", notes = "", authorizations = {
@@ -126,7 +115,7 @@ public interface ProductApi {
 	@RequestMapping(value = "/product", produces = { "application/json", "application/xml" }, consumes = {
 			"application/json", "application/xml" }, method = RequestMethod.PUT)
 	ResponseEntity<Void> updateProduct(
-			@ApiParam(value = "Product object that needs to be added to the store", required = true) @Valid @RequestBody Product body);
+			@ApiParam(value = "Product object that needs to be added to the store", required = true) @Valid @RequestBody ProductDto body);
 
 	@ApiOperation(value = "Updates a product in the store with form data", nickname = "updateProductWithForm", notes = "", authorizations = {
 			@Authorization(value = "petstore_auth", scopes = {

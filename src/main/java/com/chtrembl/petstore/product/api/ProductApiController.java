@@ -1,5 +1,7 @@
 package com.chtrembl.petstore.product.api;
 
+import com.chtrembl.petstore.product.model.dto.ProductDto;
+import com.chtrembl.petstore.product.service.ProductService;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -26,9 +28,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.chtrembl.petstore.product.model.ContainerEnvironment;
-import com.chtrembl.petstore.product.model.DataPreload;
 import com.chtrembl.petstore.product.model.ModelApiResponse;
-import com.chtrembl.petstore.product.model.Product;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,12 +50,7 @@ public class ProductApiController implements ProductApi {
 	private ContainerEnvironment containerEnvironment;
 
 	@Autowired
-	private DataPreload dataPreload;
-
-	@Override
-	public DataPreload getBeanToBeAutowired() {
-		return dataPreload;
-	}
+	private ProductService productService	;
 
 	@org.springframework.beans.factory.annotation.Autowired
 	public ProductApiController(ObjectMapper objectMapper, NativeWebRequest request) {
@@ -89,7 +84,7 @@ public class ProductApiController implements ProductApi {
 	}
 
 	@Override
-	public ResponseEntity<List<Product>> findProductsByStatus(
+	public ResponseEntity<List<ProductDto>> findProductsByStatus(
 			@NotNull @ApiParam(value = "Status values that need to be considered for filter", required = true, allowableValues = "available, pending, sold") @Valid @RequestParam(value = "status", required = true) List<String> status) {
 		conigureThreadForLogging();
 
@@ -101,7 +96,7 @@ public class ProductApiController implements ProductApi {
 					"PetStoreProductService incoming GET request to petstoreproductservice/v2/pet/findProductsByStatus?status=%s",
 					status));
 			try {
-				String petsJSON = new ObjectMapper().writeValueAsString(this.getPreloadedProducts());
+				String petsJSON = new ObjectMapper().writeValueAsString(productService.findAll());
 				ApiUtil.setResponse(request, "application/json", petsJSON);
 				return new ResponseEntity<>(HttpStatus.OK);
 			} catch (JsonProcessingException e) {
@@ -111,85 +106,99 @@ public class ProductApiController implements ProductApi {
 			}
 		}
 
-		return new ResponseEntity<List<Product>>(HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<List<ProductDto>>(HttpStatus.NOT_IMPLEMENTED);
+	}
+
+	@RequestMapping(value = "/allproducts", produces = { "application/json" }, method = RequestMethod.GET)
+	public ResponseEntity<List<ProductDto>> findAllPets()		{
+		String acceptType = request.getHeader("Content-Type");
+		String contentType = request.getHeader("Content-Type");
+		try {
+			String petsJSON = new ObjectMapper().writeValueAsString(productService.findAll());
+			ApiUtil.setResponse(request, "application/json", petsJSON);
+			return new ResponseEntity<>(HttpStatus.OK);
+		} catch (JsonProcessingException e) {
+			ApiUtil.setResponse(request, "application/json", e.getMessage());
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@Override
 	public ResponseEntity<Void> addProduct(
-			@ApiParam(value = "Product object that needs to be added to the store", required = true) @Valid @RequestBody Product body) {
+			@ApiParam(value = "Product   object that needs to be added to the store", required = true) @Valid @RequestBody ProductDto body) {
 		String accept = request.getHeader("Accept");
 		return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@Override
 	public ResponseEntity<Void> deleteProduct(
-			@ApiParam(value = "Product id to delete", required = true) @PathVariable("productId") Long productId,
+			@ApiParam(value = "Product   id to delete", required = true) @PathVariable("productId") Long productId,
 			@ApiParam(value = "") @RequestHeader(value = "api_key", required = false) String apiKey) {
 		String accept = request.getHeader("Accept");
 		return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@Override
-	public ResponseEntity<List<Product>> findProductsByTags(
+	public ResponseEntity<List<ProductDto>> findProductsByTags(
 			@NotNull @ApiParam(value = "Tags to filter by", required = true) @Valid @RequestParam(value = "tags", required = true) List<String> tags) {
 		String accept = request.getHeader("Accept");
 		if (accept != null && accept.contains("application/json")) {
 			try {
-				return new ResponseEntity<List<Product>>(objectMapper.readValue(
+				return new ResponseEntity<List<ProductDto>>(objectMapper.readValue(
 						"[ {  \"photoUrls\" : [ \"photoUrls\", \"photoUrls\" ],  \"name\" : \"toy\",  \"id\" : 0,  \"category\" : {    \"name\" : \"name\",    \"id\" : 6  },  \"tags\" : [ {    \"name\" : \"name\",    \"id\" : 1  }, {    \"name\" : \"name\",    \"id\" : 1  } ],  \"status\" : \"available\"}, {  \"photoUrls\" : [ \"photoUrls\", \"photoUrls\" ],  \"name\" : \"toy\",  \"id\" : 0,  \"category\" : {    \"name\" : \"name\",    \"id\" : 6  },  \"tags\" : [ {    \"name\" : \"name\",    \"id\" : 1  }, {    \"name\" : \"name\",    \"id\" : 1  } ],  \"status\" : \"available\"} ]",
 						List.class), HttpStatus.NOT_IMPLEMENTED);
 			} catch (IOException e) {
 				log.error("Couldn't serialize response for content type application/json", e);
-				return new ResponseEntity<List<Product>>(HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<List<ProductDto>>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
 
 		if (accept != null && accept.contains("application/xml")) {
 			try {
-				return new ResponseEntity<List<Product>>(objectMapper.readValue(
-						"<Product>  <id>123456789</id>  <name>toy</name>  <photoUrls>    <photoUrls>aeiou</photoUrls>  </photoUrls>  <tags>  </tags>  <status>aeiou</status></Product>",
+				return new ResponseEntity<List<ProductDto>>(objectMapper.readValue(
+						"<Product  >  <id>123456789</id>  <name>toy</name>  <photoUrls>    <photoUrls>aeiou</photoUrls>  </photoUrls>  <tags>  </tags>  <status>aeiou</status></Product  >",
 						List.class), HttpStatus.NOT_IMPLEMENTED);
 			} catch (IOException e) {
 				log.error("Couldn't serialize response for content type application/xml", e);
-				return new ResponseEntity<List<Product>>(HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<List<ProductDto>>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
 
-		return new ResponseEntity<List<Product>>(HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<List<ProductDto>>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@Override
-	public ResponseEntity<Product> getProductById(
+	public ResponseEntity<ProductDto> getProductById(
 			@ApiParam(value = "ID of product to return", required = true) @PathVariable("productId") Long productId) {
 		String accept = request.getHeader("Accept");
 		if (accept != null && accept.contains("application/json")) {
 			try {
-				return new ResponseEntity<Product>(objectMapper.readValue(
+				return new ResponseEntity<ProductDto>(objectMapper.readValue(
 						"{  \"photoUrls\" : [ \"photoUrls\", \"photoUrls\" ],  \"name\" : \"toy\",  \"id\" : 0,  \"category\" : {    \"name\" : \"name\",    \"id\" : 6  },  \"tags\" : [ {    \"name\" : \"name\",    \"id\" : 1  }, {    \"name\" : \"name\",    \"id\" : 1  } ],  \"status\" : \"available\"}",
-						Product.class), HttpStatus.NOT_IMPLEMENTED);
+						ProductDto.class), HttpStatus.NOT_IMPLEMENTED);
 			} catch (IOException e) {
 				log.error("Couldn't serialize response for content type application/json", e);
-				return new ResponseEntity<Product>(HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<ProductDto>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
 
 		if (accept != null && accept.contains("application/xml")) {
 			try {
-				return new ResponseEntity<Product>(objectMapper.readValue(
-						"<Product>  <id>123456789</id>  <name>toy</name>  <photoUrls>    <photoUrls>aeiou</photoUrls>  </photoUrls>  <tags>  </tags>  <status>aeiou</status></Product>",
-						Product.class), HttpStatus.NOT_IMPLEMENTED);
+				return new ResponseEntity<ProductDto>(objectMapper.readValue(
+						"<Product  >  <id>123456789</id>  <name>toy</name>  <photoUrls>    <photoUrls>aeiou</photoUrls>  </photoUrls>  <tags>  </tags>  <status>aeiou</status></Product  >",
+						ProductDto.class), HttpStatus.NOT_IMPLEMENTED);
 			} catch (IOException e) {
 				log.error("Couldn't serialize response for content type application/xml", e);
-				return new ResponseEntity<Product>(HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<ProductDto>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
 
-		return new ResponseEntity<Product>(HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<ProductDto>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@Override
 	public ResponseEntity<Void> updateProduct(
-			@ApiParam(value = "Product object that needs to be added to the store", required = true) @Valid @RequestBody Product body) {
+			@ApiParam(value = "Product   object that needs to be added to the store", required = true) @Valid @RequestBody ProductDto body) {
 		String accept = request.getHeader("Accept");
 		return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
 	}
